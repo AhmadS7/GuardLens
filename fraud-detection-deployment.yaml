@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fraud-detection-api
+spec:
+  replicas: 2 # Number of replicas for high availability
+  selector:
+    matchLabels:
+      app: fraud-detection
+  template:
+    metadata:
+      labels:
+        app: fraud-detection
+    spec:
+      containers:
+        - name: api
+          image: fraud-detection:latest # Replace with your Docker image name
+          ports:
+            - containerPort: 5000
+          env:
+            - name: KAFKA_BROKER
+              value: "kafka:9092"
+          volumeMounts:
+            - name: models-volume
+              mountPath: /app/models
+      volumes:
+        - name: models-volume
+          hostPath:
+            path: /path/to/your/models # Replace with the actual path on your host
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fraud-detection-service
+spec:
+  selector:
+    app: fraud-detection
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: LoadBalancer

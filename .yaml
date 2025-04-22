@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  # Flask API service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000" # Map container port 5000 to host port 5000
+    volumes:
+      - ./models:/app/models # Mount models directory for persistence
+    depends_on:
+      - kafka
+
+  # Kafka service
+  kafka:
+    image: "bitnami/kafka:latest"
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+
+  # Zookeeper service (required by Kafka)
+  zookeeper:
+    image: "bitnami/zookeeper:latest"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
